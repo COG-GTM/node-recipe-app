@@ -48,6 +48,7 @@ describe('Routes', () => {
   test('POST /recipes should create a new recipe', async () => {
     const newRecipe = {
       title: 'New Test Recipe',
+      description: '  A short test description  ',
       ingredients: 'New test ingredients',
       method: 'New test method'
     };
@@ -63,5 +64,24 @@ describe('Routes', () => {
     const recipe = await db.get('SELECT * FROM recipes WHERE title = ?', [newRecipe.title]);
     expect(recipe).toBeDefined();
     expect(recipe.title).toBe(newRecipe.title);
+    expect(recipe.description).toBe('A short test description');
+  });
+
+  test('POST /recipes should reject an over-long description', async () => {
+    const newRecipe = {
+      title: 'Over Long Description Recipe',
+      description: 'a'.repeat(501),
+      ingredients: 'New test ingredients',
+      method: 'New test method'
+    };
+
+    const response = await request(app)
+      .post('/recipes')
+      .send(newRecipe);
+
+    expect(response.status).toBe(400);
+
+    const recipe = await db.get('SELECT * FROM recipes WHERE title = ?', [newRecipe.title]);
+    expect(recipe).toBeUndefined();
   });
 });
