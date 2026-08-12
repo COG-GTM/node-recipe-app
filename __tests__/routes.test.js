@@ -64,4 +64,96 @@ describe('Routes', () => {
     expect(recipe).toBeDefined();
     expect(recipe.title).toBe(newRecipe.title);
   });
+
+  test('POST /recipes should persist the description', async () => {
+    const newRecipe = {
+      title: 'Recipe With Description',
+      description: 'A tasty description',
+      ingredients: 'Ingredients',
+      method: 'Method'
+    };
+
+    const response = await request(app).post('/recipes').send(newRecipe);
+
+    expect(response.status).toBe(302);
+
+    const recipe = await db.get('SELECT * FROM recipes WHERE title = ?', [newRecipe.title]);
+    expect(recipe.description).toBe(newRecipe.description);
+  });
+
+  test('POST /recipes should accept a description of exactly 300 characters', async () => {
+    const description = 'a'.repeat(300);
+    const newRecipe = {
+      title: 'Max Length Description',
+      description,
+      ingredients: 'Ingredients',
+      method: 'Method'
+    };
+
+    const response = await request(app).post('/recipes').send(newRecipe);
+
+    expect(response.status).toBe(302);
+
+    const recipe = await db.get('SELECT * FROM recipes WHERE title = ?', [newRecipe.title]);
+    expect(recipe.description).toBe(description);
+  });
+
+  test('POST /recipes should reject a description longer than 300 characters', async () => {
+    const newRecipe = {
+      title: 'Too Long Description',
+      description: 'a'.repeat(301),
+      ingredients: 'Ingredients',
+      method: 'Method'
+    };
+
+    const response = await request(app).post('/recipes').send(newRecipe);
+
+    expect(response.status).toBe(400);
+
+    const recipe = await db.get('SELECT * FROM recipes WHERE title = ?', [newRecipe.title]);
+    expect(recipe).toBeUndefined();
+  });
+
+  test('POST /recipes/:id/edit should update the description', async () => {
+    const result = await db.run(
+      'INSERT INTO recipes (title, description, ingredients, method) VALUES (?, ?, ?, ?)',
+      ['Editable Recipe', 'Original description', 'Ingredients', 'Method']
+    );
+
+    const response = await request(app)
+      .post(`/recipes/${result.lastID}/edit`)
+      .send({
+        title: 'Editable Recipe',
+        description: 'Updated description',
+        ingredients: 'Ingredients',
+        method: 'Method'
+      });
+
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe(`/recipes/${result.lastID}`);
+
+    const recipe = await db.get('SELECT * FROM recipes WHERE id = ?', [result.lastID]);
+    expect(recipe.description).toBe('Updated description');
+  });
+
+  test('POST /recipes/:id/edit should reject a description longer than 300 characters', async () => {
+    const result = await db.run(
+      'INSERT INTO recipes (title, description, ingredients, method) VALUES (?, ?, ?, ?)',
+      ['Uneditable Recipe', 'Original description', 'Ingredients', 'Method']
+    );
+
+    const response = await request(app)
+      .post(`/recipes/${result.lastID}/edit`)
+      .send({
+        title: 'Uneditable Recipe',
+        description: 'a'.repeat(301),
+        ingredients: 'Ingredients',
+        method: 'Method'
+      });
+
+    expect(response.status).toBe(400);
+
+    const recipe = await db.get('SELECT * FROM recipes WHERE id = ?', [result.lastID]);
+    expect(recipe.description).toBe('Original description');
+  });
 });

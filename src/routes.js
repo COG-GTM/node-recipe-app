@@ -1,5 +1,6 @@
 const express = require('express')
 const { getDbConnection } = require('./database')
+const { normalizeDescription, validateDescription } = require('./validation')
 
 const router = express.Router()
 
@@ -21,18 +22,32 @@ router.get('/recipes/:id', async (req, res) => {
 })
 
 router.post('/recipes', async (req, res) => {
+	const { title, description, ingredients, method } = req.body
+	const error = validateDescription(description)
+	if (error) {
+		return res.status(400).send(error)
+	}
 	const db = await getDbConnection()
-	const { title, ingredients, method } = req.body
-	await db.run('INSERT INTO recipes (title, ingredients, method) VALUES (?, ?, ?)', [title, ingredients, method])
+	await db.run('INSERT INTO recipes (title, description, ingredients, method) VALUES (?, ?, ?, ?)', [
+		title,
+		normalizeDescription(description),
+		ingredients,
+		method,
+	])
 	res.redirect('/recipes')
 })
 
 router.post('/recipes/:id/edit', async (req, res) => {
-	const db = await getDbConnection()
 	const recipeId = req.params.id
-	const { title, ingredients, method } = req.body
-	await db.run('UPDATE recipes SET title = ?, ingredients = ?, method = ? WHERE id = ?', [
+	const { title, description, ingredients, method } = req.body
+	const error = validateDescription(description)
+	if (error) {
+		return res.status(400).send(error)
+	}
+	const db = await getDbConnection()
+	await db.run('UPDATE recipes SET title = ?, description = ?, ingredients = ?, method = ? WHERE id = ?', [
 		title,
+		normalizeDescription(description),
 		ingredients,
 		method,
 		recipeId,
