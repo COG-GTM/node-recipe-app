@@ -33,4 +33,15 @@ describe('Database Operations', () => {
     expect(recipe.ingredients).toBe(ingredients);
     expect(recipe.method).toBe(method);
   });
+
+  test('should insert a recipe with a description', async () => {
+    const title = 'Described Recipe';
+    const description = 'A short description of the recipe';
+
+    await db.run('INSERT INTO recipes (title, description, ingredients, method) VALUES (?, ?, ?, ?)',
+      [title, description, 'Test ingredients', 'Test method']);
+
+    const recipe = await db.get('SELECT * FROM recipes WHERE title = ?', [title]);
+    expect(recipe.description).toBe(description);
+  });
 });
