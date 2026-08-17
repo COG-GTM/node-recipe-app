@@ -11,6 +11,11 @@
         <!-- Recipe Details -->
         <div id="recipe-details" class="recipe-content">
             <div class="recipe-section">
+                <h2>Description</h2>
+                <div class="description" id="recipe-description">{{recipe.description}}</div>
+            </div>
+
+            <div class="recipe-section">
                 <h2>Ingredients</h2>
                 <div class="ingredients">
                     {{#each (split recipe.ingredients (newline))}}
@@ -54,6 +59,11 @@
                     <input type="text" id="edit-title" name="title" value="{{recipe.title}}" required>
                 </div>
                 
+                <div class="form-group">
+                    <label for="edit-description">Description:</label>
+                    <textarea id="edit-description" name="description" rows="2" maxlength="300">{{recipe.description}}</textarea>
+                </div>
+
                 <div class="form-group">
                     <label for="edit-ingredients">Ingredients:</label>
                     <textarea id="edit-ingredients" name="ingredients" rows="4" required>{{recipe.ingredients}}</textarea>

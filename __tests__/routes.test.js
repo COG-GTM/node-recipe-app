@@ -64,4 +64,83 @@ describe('Routes', () => {
     expect(recipe).toBeDefined();
     expect(recipe.title).toBe(newRecipe.title);
   });
+
+  test('POST /recipes should persist a valid description', async () => {
+    const newRecipe = {
+      title: 'Described Recipe',
+      description: 'A tasty description',
+      ingredients: 'Ingredients',
+      method: 'Method'
+    };
+
+    const response = await request(app)
+      .post('/recipes')
+      .send(newRecipe);
+
+    expect(response.status).toBe(302);
+
+    const recipe = await db.get('SELECT * FROM recipes WHERE title = ?', [newRecipe.title]);
+    expect(recipe.description).toBe(newRecipe.description);
+  });
+
+  test('POST /recipes should reject a description longer than 300 characters', async () => {
+    const newRecipe = {
+      title: 'Too Long Description',
+      description: 'a'.repeat(301),
+      ingredients: 'Ingredients',
+      method: 'Method'
+    };
+
+    const response = await request(app)
+      .post('/recipes')
+      .send(newRecipe);
+
+    expect(response.status).toBe(400);
+
+    const recipe = await db.get('SELECT * FROM recipes WHERE title = ?', [newRecipe.title]);
+    expect(recipe).toBeUndefined();
+  });
+
+  test('POST /recipes/:id/edit should update the description', async () => {
+    const { lastID } = await db.run(
+      'INSERT INTO recipes (title, description, ingredients, method) VALUES (?, ?, ?, ?)',
+      ['Editable Recipe', 'Original description', 'Ingredients', 'Method']
+    );
+
+    const response = await request(app)
+      .post(`/recipes/${lastID}/edit`)
+      .send({
+        title: 'Editable Recipe',
+        description: 'Updated description',
+        ingredients: 'Ingredients',
+        method: 'Method'
+      });
+
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe(`/recipes/${lastID}`);
+
+    const recipe = await db.get('SELECT * FROM recipes WHERE id = ?', [lastID]);
+    expect(recipe.description).toBe('Updated description');
+  });
+
+  test('POST /recipes/:id/edit should reject a description longer than 300 characters', async () => {
+    const { lastID } = await db.run(
+      'INSERT INTO recipes (title, description, ingredients, method) VALUES (?, ?, ?, ?)',
+      ['Editable Recipe', 'Original description', 'Ingredients', 'Method']
+    );
+
+    const response = await request(app)
+      .post(`/recipes/${lastID}/edit`)
+      .send({
+        title: 'Editable Recipe',
+        description: 'a'.repeat(301),
+        ingredients: 'Ingredients',
+        method: 'Method'
+      });
+
+    expect(response.status).toBe(400);
+
+    const recipe = await db.get('SELECT * FROM recipes WHERE id = ?', [lastID]);
+    expect(recipe.description).toBe('Original description');
+  });
 });
