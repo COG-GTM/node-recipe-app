@@ -43,10 +43,12 @@ app.engine(
 )
 app.set('view engine', 'hbs')
 app.set('views', './views')
-initializeDb().catch(console.error)
-
 app.use('/', routes)
 
-app.listen(PORT, () => {
-	console.log(`Server running on port ${PORT}`)
-})
+initializeDb()
+	.then(() => {
+		app.listen(PORT, () => {
+			console.log(`Server running on port ${PORT}`)
+		})
+	})
+	.catch(console.error)
