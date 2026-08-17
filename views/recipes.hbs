@@ -41,6 +41,9 @@
                 </div>
                 <div class="recipe-actions">
                     <a href="/recipes/{{id}}" class="btn btn-sm">View Details</a>
+                    <form action="/recipes/{{id}}/delete" method="POST" onsubmit="return confirmDelete()">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
                 </div>
             </div>
             {{/each}}
@@ -61,5 +64,9 @@ function showAddForm() {
 function hideAddForm() {
     document.getElementById('add-recipe-form').style.display = 'none';
     document.querySelector('#add-recipe-form form').reset();
+}
+
+function confirmDelete() {
+    return confirm('Are you sure you want to delete this recipe?');
 }
 </script>
