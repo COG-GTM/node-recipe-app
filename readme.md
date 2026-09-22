@@ -36,6 +36,8 @@ All configuration is done through environment variables:
 | `PORT` | `3000` | Port the HTTP server listens on. |
 | `RATE_LIMIT_ANON_PER_MINUTE` | `60` | Maximum requests per minute for unauthenticated clients, counted per client IP. |
 | `RATE_LIMIT_AUTH_PER_MINUTE` | `600` | Maximum requests per minute for authenticated clients, counted per API key (`X-API-Key` header or `Authorization: Bearer <key>`). |
+| `API_KEYS` | _(empty)_ | Comma-separated list of valid API keys. Requests presenting a key that is not in this list are treated as unauthenticated. |
+| `TRUST_PROXY` | `false` | Value for Express's [`trust proxy`](https://expressjs.com/en/guide/behind-proxies.html) setting (e.g. `1`, `true`, `loopback`). Set this when running behind a reverse proxy so per-IP limits use the real client address. |
 
 Rate limits apply to every route except `GET /health`. When a limit is exceeded the server responds with
 HTTP `429`, a `Retry-After` header (seconds) and the body `{"error": "rate_limited", "retry_after_seconds": N}`.

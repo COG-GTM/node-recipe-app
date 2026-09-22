@@ -85,5 +85,16 @@ describe('loadConfig rate limit settings', () => {
   test('rejects non-positive or non-numeric values', () => {
     expect(() => loadConfig({ RATE_LIMIT_ANON_PER_MINUTE: '0' })).toThrow();
     expect(() => loadConfig({ RATE_LIMIT_AUTH_PER_MINUTE: 'lots' })).toThrow();
+    expect(() => loadConfig({ RATE_LIMIT_ANON_PER_MINUTE: '5abc' })).toThrow();
+    expect(() => loadConfig({ RATE_LIMIT_ANON_PER_MINUTE: '1.5' })).toThrow();
+  });
+
+  test('parses API_KEYS and TRUST_PROXY', () => {
+    expect(loadConfig({}).apiKeys.size).toBe(0);
+    expect(loadConfig({}).trustProxy).toBe(false);
+    expect([...loadConfig({ API_KEYS: 'a, b,,c' }).apiKeys]).toEqual(['a', 'b', 'c']);
+    expect(loadConfig({ TRUST_PROXY: '1' }).trustProxy).toBe(1);
+    expect(loadConfig({ TRUST_PROXY: 'true' }).trustProxy).toBe(true);
+    expect(loadConfig({ TRUST_PROXY: 'loopback' }).trustProxy).toBe('loopback');
   });
 });

@@ -9,11 +9,14 @@ const config = loadConfig()
 const app = express()
 const PORT = config.port
 
+app.set('trust proxy', config.trustProxy)
+
 app.get('/health', (req, res) => res.json({ status: 'ok' }))
 app.use(
 	createRateLimiter({
 		anonLimit: config.rateLimitAnonPerMinute,
 		authLimit: config.rateLimitAuthPerMinute,
+		apiKeys: config.apiKeys,
 	})
 )
 

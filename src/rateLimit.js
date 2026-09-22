@@ -12,9 +12,10 @@ function extractApiKey(req) {
 }
 
 class RateLimiter {
-	constructor({ anonLimit, authLimit, windowMs = WINDOW_MS, now = Date.now }) {
+	constructor({ anonLimit, authLimit, apiKeys = new Set(), windowMs = WINDOW_MS, now = Date.now }) {
 		this.anonLimit = anonLimit
 		this.authLimit = authLimit
+		this.apiKeys = apiKeys
 		this.windowMs = windowMs
 		this.now = now
 		this.buckets = new Map()
@@ -50,7 +51,7 @@ class RateLimiter {
 	middleware() {
 		return (req, res, next) => {
 			const apiKey = extractApiKey(req)
-			const result = apiKey
+			const result = apiKey && this.apiKeys.has(apiKey)
 				? this.consume(`key:${apiKey}`, this.authLimit)
 				: this.consume(`ip:${req.ip}`, this.anonLimit)
 
