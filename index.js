@@ -2,9 +2,23 @@ const express = require('express')
 const exphbs = require('express-handlebars')
 const { initializeDb } = require('./src/database')
 const routes = require('./src/routes')
+const { loadConfig } = require('./src/config')
+const { createRateLimiter } = require('./src/rateLimit')
 
+const config = loadConfig()
 const app = express()
-const PORT = process.env.PORT || 3000
+const PORT = config.port
+
+app.set('trust proxy', config.trustProxy)
+
+app.get('/health', (req, res) => res.json({ status: 'ok' }))
+app.use(
+	createRateLimiter({
+		anonLimit: config.rateLimitAnonPerMinute,
+		authLimit: config.rateLimitAuthPerMinute,
+		apiKeys: config.apiKeys,
+	})
+)
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
