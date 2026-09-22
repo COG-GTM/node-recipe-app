@@ -27,6 +27,26 @@ npm start
 ```
 Visit `http://localhost:3000` to start managing your recipes.
 
+## Configuration
+
+The app is configured through environment variables:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PORT` | `3000` | Port the HTTP server listens on. |
+| `RATE_LIMIT_ANON_PER_MINUTE` | `60` | Requests per minute allowed for unauthenticated clients, tracked per client IP. |
+| `RATE_LIMIT_AUTH_PER_MINUTE` | `600` | Requests per minute allowed for authenticated clients, tracked per API key. |
+
+### Rate limiting
+
+Every route except `GET /health` is rate limited. A request counts as authenticated when it carries an `X-API-Key: <key>` header or an `Authorization: Bearer <key>` header; otherwise it is counted against the client IP (`req.ip`, so set Express `trust proxy` if you run behind a reverse proxy). Responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset` headers. When a limit is exceeded the server responds with `429 Too Many Requests`, a `Retry-After` header (seconds) and the body:
+
+```json
+{ "error": "rate_limited", "retry_after_seconds": 42 }
+```
+
+Counters are kept in memory per process and reset on restart.
+
 ## License
 
 This project is licensed under the terms of the MIT open source license. Please refer to [MIT](https://github.com/github-samples/node-recipe-app/blob/main/LICENSE) for the full terms.

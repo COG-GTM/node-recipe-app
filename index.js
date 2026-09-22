@@ -2,9 +2,13 @@ const express = require('express')
 const exphbs = require('express-handlebars')
 const { initializeDb } = require('./src/database')
 const routes = require('./src/routes')
+const { createRateLimiter } = require('./src/rateLimiter')
 
 const app = express()
 const PORT = process.env.PORT || 3000
+
+app.get('/health', (req, res) => res.json({ status: 'ok' }))
+app.use(createRateLimiter())
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
