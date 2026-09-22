@@ -9,18 +9,28 @@ function extractApiKey(req) {
 }
 
 class RateLimiter {
-	constructor({ anonymousLimit, authenticatedLimit, windowMs, now = Date.now } = {}) {
+	constructor({ anonymousLimit, authenticatedLimit, windowMs, apiKeys, now = Date.now } = {}) {
 		const config = getRateLimitConfig()
 		this.anonymousLimit = anonymousLimit ?? config.anonymousLimit
 		this.authenticatedLimit = authenticatedLimit ?? config.authenticatedLimit
 		this.windowMs = windowMs ?? config.windowMs
+		this.apiKeys = apiKeys === undefined ? config.apiKeys : apiKeys
 		this.now = now
 		this.buckets = new Map()
+		this.nextPruneAt = 0
+	}
+
+	isAuthenticated(apiKey) {
+		if (!apiKey) return false
+		return this.apiKeys ? this.apiKeys.has(apiKey) : true
 	}
 
 	hit(key, limit) {
 		const now = this.now()
-		this.prune(now)
+		if (now >= this.nextPruneAt) {
+			this.prune(now)
+			this.nextPruneAt = now + this.windowMs
+		}
 		let bucket = this.buckets.get(key)
 		if (!bucket || bucket.resetAt <= now) {
 			bucket = { count: 0, resetAt: now + this.windowMs }
@@ -57,8 +67,9 @@ function createRateLimiter(options = {}) {
 		if (skipPaths.has(req.path)) return next()
 
 		const apiKey = extractApiKey(req)
-		const key = apiKey ? `key:${apiKey}` : `ip:${req.ip}`
-		const limit = apiKey ? limiter.authenticatedLimit : limiter.anonymousLimit
+		const authenticated = limiter.isAuthenticated(apiKey)
+		const key = authenticated ? `key:${apiKey}` : `ip:${req.ip}`
+		const limit = authenticated ? limiter.authenticatedLimit : limiter.anonymousLimit
 		const result = limiter.hit(key, limit)
 
 		res.set('X-RateLimit-Limit', String(result.limit))

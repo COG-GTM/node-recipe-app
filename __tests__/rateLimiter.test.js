@@ -49,15 +49,26 @@ describe('RateLimiter', () => {
     expect(limiter.hit('key:abc', 1).allowed).toBe(true);
   });
 
-  test('prunes expired buckets', () => {
+  test('prunes expired buckets at most once per window', () => {
     const now = fakeClock();
     const limiter = new RateLimiter({ windowMs: 1000, now });
+    const prune = jest.spyOn(limiter, 'prune');
     limiter.hit('a', 5);
     limiter.hit('b', 5);
+    expect(prune).toHaveBeenCalledTimes(1);
     expect(limiter.buckets.size).toBe(2);
     now.advance(1000);
     limiter.hit('c', 5);
+    expect(prune).toHaveBeenCalledTimes(2);
     expect(limiter.buckets.size).toBe(1);
+  });
+
+  test('isAuthenticated accepts any key when no allowlist, only listed keys otherwise', () => {
+    expect(new RateLimiter({ apiKeys: null }).isAuthenticated('anything')).toBe(true);
+    expect(new RateLimiter({ apiKeys: null }).isAuthenticated(null)).toBe(false);
+    const strict = new RateLimiter({ apiKeys: new Set(['good']) });
+    expect(strict.isAuthenticated('good')).toBe(true);
+    expect(strict.isAuthenticated('bad')).toBe(false);
   });
 
   test('uses configured defaults when no options are given', () => {
@@ -87,7 +98,7 @@ describe('extractApiKey', () => {
 
 describe('getRateLimitConfig', () => {
   test('returns defaults when env vars are unset', () => {
-    expect(getRateLimitConfig({})).toEqual({ anonymousLimit: 60, authenticatedLimit: 600, windowMs: 60000 });
+    expect(getRateLimitConfig({})).toEqual({ anonymousLimit: 60, authenticatedLimit: 600, windowMs: 60000, apiKeys: null });
   });
 
   test('reads overrides from env vars', () => {
@@ -100,5 +111,12 @@ describe('getRateLimitConfig', () => {
     expect(() => getRateLimitConfig({ RATE_LIMIT_ANON_PER_MINUTE: 'abc' })).toThrow();
     expect(() => getRateLimitConfig({ RATE_LIMIT_AUTH_PER_MINUTE: '0' })).toThrow();
     expect(() => getRateLimitConfig({ RATE_LIMIT_AUTH_PER_MINUTE: '-1' })).toThrow();
+    expect(() => getRateLimitConfig({ RATE_LIMIT_AUTH_PER_MINUTE: '10abc' })).toThrow();
+    expect(() => getRateLimitConfig({ RATE_LIMIT_AUTH_PER_MINUTE: '1.5' })).toThrow();
+  });
+
+  test('parses the API key allowlist', () => {
+    expect(getRateLimitConfig({ RATE_LIMIT_API_KEYS: ' a, b ,,c' }).apiKeys).toEqual(new Set(['a', 'b', 'c']));
+    expect(getRateLimitConfig({ RATE_LIMIT_API_KEYS: '' }).apiKeys).toBeNull();
   });
 });

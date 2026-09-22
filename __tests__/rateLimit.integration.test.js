@@ -64,6 +64,13 @@ describe('Rate limiting integration', () => {
     await request(app).get('/').expect(429);
   });
 
+  test('unknown keys fall back to the per-IP limit when an allowlist is configured', async () => {
+    const app = createTestApp({ anonymousLimit: 1, authenticatedLimit: 5, apiKeys: new Set(['valid']) });
+    await request(app).get('/').set('X-API-Key', 'rotating-1').expect(200);
+    await request(app).get('/').set('X-API-Key', 'rotating-2').expect(429);
+    await request(app).get('/').set('X-API-Key', 'valid').expect(200);
+  });
+
   test('POST routes are covered too', async () => {
     const app = createTestApp({ anonymousLimit: 1 });
     await request(app).get('/').expect(200);

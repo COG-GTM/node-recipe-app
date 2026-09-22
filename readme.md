@@ -36,10 +36,12 @@ The app is configured through environment variables:
 | `PORT` | `3000` | Port the HTTP server listens on. |
 | `RATE_LIMIT_ANON_PER_MINUTE` | `60` | Requests per minute allowed for unauthenticated clients, tracked per client IP. |
 | `RATE_LIMIT_AUTH_PER_MINUTE` | `600` | Requests per minute allowed for authenticated clients, tracked per API key. |
+| `RATE_LIMIT_API_KEYS` | _(unset)_ | Comma-separated list of accepted API keys. When set, only these keys get the authenticated limit; unknown keys are treated as unauthenticated. When unset, any presented key is accepted (development only). |
+| `TRUST_PROXY` | _(unset)_ | Express `trust proxy` setting (e.g. `1`, `loopback`, `10.0.0.0/8`). Set this when running behind a reverse proxy so per-IP limits use the real client address. |
 
 ### Rate limiting
 
-Every route except `GET /health` is rate limited. A request counts as authenticated when it carries an `X-API-Key: <key>` header or an `Authorization: Bearer <key>` header; otherwise it is counted against the client IP (`req.ip`, so set Express `trust proxy` if you run behind a reverse proxy). Responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset` headers. When a limit is exceeded the server responds with `429 Too Many Requests`, a `Retry-After` header (seconds) and the body:
+Every route except `GET /health` is rate limited. A request counts as authenticated when it carries an `X-API-Key: <key>` header or an `Authorization: Bearer <key>` header (and, if `RATE_LIMIT_API_KEYS` is set, the key is in that list); otherwise it is counted against the client IP (`req.ip`, see `TRUST_PROXY`). Responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset` headers. When a limit is exceeded the server responds with `429 Too Many Requests`, a `Retry-After` header (seconds) and the body:
 
 ```json
 { "error": "rate_limited", "retry_after_seconds": 42 }

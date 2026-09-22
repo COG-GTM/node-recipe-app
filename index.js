@@ -7,6 +7,11 @@ const { createRateLimiter } = require('./src/rateLimiter')
 const app = express()
 const PORT = process.env.PORT || 3000
 
+if (process.env.TRUST_PROXY) {
+	const value = process.env.TRUST_PROXY
+	app.set('trust proxy', /^\d+$/.test(value) ? Number(value) : value === 'true' ? true : value)
+}
+
 app.get('/health', (req, res) => res.json({ status: 'ok' }))
 app.use(createRateLimiter())
 
