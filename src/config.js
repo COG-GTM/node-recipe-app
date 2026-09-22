@@ -14,9 +14,8 @@ function parsePositiveInt(value, fallback) {
 }
 
 function parseKeyList(value) {
-	if (!value) return null
-	const keys = value.split(',').map((k) => k.trim()).filter(Boolean)
-	return keys.length ? new Set(keys) : null
+	if (value === undefined || value === null) return null
+	return new Set(value.split(',').map((k) => k.trim()).filter(Boolean))
 }
 
 function getRateLimitConfig(env = process.env) {

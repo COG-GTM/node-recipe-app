@@ -1,11 +1,19 @@
 const { getRateLimitConfig } = require('./config')
 
-function extractApiKey(req) {
+function extractApiKeys(req) {
+	const keys = []
 	const headerKey = req.get('x-api-key')
-	if (headerKey) return headerKey.trim()
+	if (headerKey && headerKey.trim()) keys.push(headerKey.trim())
 	const auth = req.get('authorization')
-	if (auth && /^bearer\s+/i.test(auth)) return auth.replace(/^bearer\s+/i, '').trim()
-	return null
+	if (auth && /^bearer\s+/i.test(auth)) {
+		const bearer = auth.replace(/^bearer\s+/i, '').trim()
+		if (bearer) keys.push(bearer)
+	}
+	return keys
+}
+
+function extractApiKey(req) {
+	return extractApiKeys(req)[0] ?? null
 }
 
 class RateLimiter {
@@ -23,6 +31,10 @@ class RateLimiter {
 	isAuthenticated(apiKey) {
 		if (!apiKey) return false
 		return this.apiKeys ? this.apiKeys.has(apiKey) : true
+	}
+
+	selectApiKey(candidates) {
+		return candidates.find((k) => this.isAuthenticated(k)) ?? null
 	}
 
 	hit(key, limit) {
@@ -66,10 +78,9 @@ function createRateLimiter(options = {}) {
 	const middleware = (req, res, next) => {
 		if (skipPaths.has(req.path)) return next()
 
-		const apiKey = extractApiKey(req)
-		const authenticated = limiter.isAuthenticated(apiKey)
-		const key = authenticated ? `key:${apiKey}` : `ip:${req.ip}`
-		const limit = authenticated ? limiter.authenticatedLimit : limiter.anonymousLimit
+		const apiKey = limiter.selectApiKey(extractApiKeys(req))
+		const key = apiKey ? `key:${apiKey}` : `ip:${req.ip}`
+		const limit = apiKey ? limiter.authenticatedLimit : limiter.anonymousLimit
 		const result = limiter.hit(key, limit)
 
 		res.set('X-RateLimit-Limit', String(result.limit))
@@ -87,4 +98,4 @@ function createRateLimiter(options = {}) {
 	return middleware
 }
 
-module.exports = { RateLimiter, createRateLimiter, extractApiKey }
+module.exports = { RateLimiter, createRateLimiter, extractApiKey, extractApiKeys }

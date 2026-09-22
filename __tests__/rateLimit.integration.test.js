@@ -69,6 +69,7 @@ describe('Rate limiting integration', () => {
     await request(app).get('/').set('X-API-Key', 'rotating-1').expect(200);
     await request(app).get('/').set('X-API-Key', 'rotating-2').expect(429);
     await request(app).get('/').set('X-API-Key', 'valid').expect(200);
+    await request(app).get('/').set('X-API-Key', 'stale').set('Authorization', 'Bearer valid').expect(200);
   });
 
   test('POST routes are covered too', async () => {

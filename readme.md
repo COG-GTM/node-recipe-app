@@ -36,7 +36,7 @@ The app is configured through environment variables:
 | `PORT` | `3000` | Port the HTTP server listens on. |
 | `RATE_LIMIT_ANON_PER_MINUTE` | `60` | Requests per minute allowed for unauthenticated clients, tracked per client IP. |
 | `RATE_LIMIT_AUTH_PER_MINUTE` | `600` | Requests per minute allowed for authenticated clients, tracked per API key. |
-| `RATE_LIMIT_API_KEYS` | _(unset)_ | Comma-separated list of accepted API keys. When set, only these keys get the authenticated limit; unknown keys are treated as unauthenticated. When unset, any presented key is accepted (development only). |
+| `RATE_LIMIT_API_KEYS` | _(unset)_ | Comma-separated list of accepted API keys. When set, only these keys get the authenticated limit; unknown keys are treated as unauthenticated (an empty value accepts no keys). When unset, any presented key is accepted (development only). |
 | `TRUST_PROXY` | _(unset)_ | Express `trust proxy` setting (e.g. `1`, `loopback`, `10.0.0.0/8`). Set this when running behind a reverse proxy so per-IP limits use the real client address. |
 
 ### Rate limiting

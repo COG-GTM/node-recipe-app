@@ -9,7 +9,8 @@ const PORT = process.env.PORT || 3000
 
 if (process.env.TRUST_PROXY) {
 	const value = process.env.TRUST_PROXY
-	app.set('trust proxy', /^\d+$/.test(value) ? Number(value) : value === 'true' ? true : value)
+	const parsed = /^\d+$/.test(value) ? Number(value) : value === 'true' ? true : value === 'false' ? false : value
+	app.set('trust proxy', parsed)
 }
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }))

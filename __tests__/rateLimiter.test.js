@@ -1,4 +1,4 @@
-const { RateLimiter, extractApiKey } = require('../src/rateLimiter');
+const { RateLimiter, extractApiKey, extractApiKeys } = require('../src/rateLimiter');
 const { getRateLimitConfig, DEFAULTS } = require('../src/config');
 
 function fakeClock(start = 0) {
@@ -69,6 +69,14 @@ describe('RateLimiter', () => {
     const strict = new RateLimiter({ apiKeys: new Set(['good']) });
     expect(strict.isAuthenticated('good')).toBe(true);
     expect(strict.isAuthenticated('bad')).toBe(false);
+    expect(new RateLimiter({ apiKeys: new Set() }).isAuthenticated('anything')).toBe(false);
+  });
+
+  test('selectApiKey prefers an allowlisted candidate from either header', () => {
+    const strict = new RateLimiter({ apiKeys: new Set(['valid']) });
+    expect(strict.selectApiKey(['stale', 'valid'])).toBe('valid');
+    expect(strict.selectApiKey(['stale'])).toBeNull();
+    expect(new RateLimiter({ apiKeys: null }).selectApiKey(['a', 'b'])).toBe('a');
   });
 
   test('uses configured defaults when no options are given', () => {
@@ -88,6 +96,11 @@ describe('extractApiKey', () => {
 
   test('reads Authorization: Bearer', () => {
     expect(extractApiKey(req({ authorization: 'Bearer xyz' }))).toBe('xyz');
+  });
+
+  test('extractApiKeys returns both candidates in header order', () => {
+    expect(extractApiKeys(req({ 'x-api-key': 'k1', authorization: 'Bearer k2' }))).toEqual(['k1', 'k2']);
+    expect(extractApiKeys(req({ 'x-api-key': '  ' }))).toEqual([]);
   });
 
   test('ignores non-bearer Authorization and missing headers', () => {
@@ -117,6 +130,8 @@ describe('getRateLimitConfig', () => {
 
   test('parses the API key allowlist', () => {
     expect(getRateLimitConfig({ RATE_LIMIT_API_KEYS: ' a, b ,,c' }).apiKeys).toEqual(new Set(['a', 'b', 'c']));
-    expect(getRateLimitConfig({ RATE_LIMIT_API_KEYS: '' }).apiKeys).toBeNull();
+    expect(getRateLimitConfig({}).apiKeys).toBeNull();
+    expect(getRateLimitConfig({ RATE_LIMIT_API_KEYS: '' }).apiKeys).toEqual(new Set());
+    expect(getRateLimitConfig({ RATE_LIMIT_API_KEYS: ',,' }).apiKeys).toEqual(new Set());
   });
 });
