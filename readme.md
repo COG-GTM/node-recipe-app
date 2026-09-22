@@ -27,6 +27,20 @@ npm start
 ```
 Visit `http://localhost:3000` to start managing your recipes.
 
+## Configuration
+
+All configuration is done through environment variables:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PORT` | `3000` | Port the HTTP server listens on. |
+| `RATE_LIMIT_ANON_PER_MINUTE` | `60` | Maximum requests per minute for unauthenticated clients, counted per client IP. |
+| `RATE_LIMIT_AUTH_PER_MINUTE` | `600` | Maximum requests per minute for authenticated clients, counted per API key (`X-API-Key` header or `Authorization: Bearer <key>`). |
+
+Rate limits apply to every route except `GET /health`. When a limit is exceeded the server responds with
+HTTP `429`, a `Retry-After` header (seconds) and the body `{"error": "rate_limited", "retry_after_seconds": N}`.
+Every limited response also carries `X-RateLimit-Limit` and `X-RateLimit-Remaining` headers.
+
 ## License
 
 This project is licensed under the terms of the MIT open source license. Please refer to [MIT](https://github.com/github-samples/node-recipe-app/blob/main/LICENSE) for the full terms.
