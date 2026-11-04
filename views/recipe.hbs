@@ -54,17 +54,17 @@
             <form action="/recipes/{{recipe.id}}/edit" method="POST">
                 <div class="form-group">
                     <label for="edit-title">Recipe Title:</label>
-                    <input type="text" id="edit-title" name="title" value="{{recipe.title}}" required>
+                    <input type="text" id="edit-title" name="title" value="{{#if formValues}}{{formValues.title}}{{else}}{{recipe.title}}{{/if}}" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="edit-ingredients">Ingredients:</label>
-                    <textarea id="edit-ingredients" name="ingredients" rows="4" required>{{recipe.ingredients}}</textarea>
+                    <textarea id="edit-ingredients" name="ingredients" rows="4" required>{{#if formValues}}{{formValues.ingredients}}{{else}}{{recipe.ingredients}}{{/if}}</textarea>
                 </div>
                 
                 <div class="form-group">
                     <label for="edit-method">Method:</label>
-                    <textarea id="edit-method" name="method" rows="6" required>{{recipe.method}}</textarea>
+                    <textarea id="edit-method" name="method" rows="6" required>{{#if formValues}}{{formValues.method}}{{else}}{{recipe.method}}{{/if}}</textarea>
                 </div>
                 
                 <div class="form-actions">

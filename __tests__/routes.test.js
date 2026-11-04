@@ -101,10 +101,11 @@ describe('Routes', () => {
     );
     const response = await request(app)
       .post(`/recipes/${lastID}/edit`)
-      .send({ title: '', ingredients: 'eggs', method: 'cook' });
+      .send({ title: '', ingredients: 'flour', method: 'bake' });
 
     expect(response.status).toBe(400);
     expect(response.body.locals.error).toBe('Recipe title is required.');
+    expect(response.body.locals.formValues).toEqual({ title: '', ingredients: 'flour', method: 'bake' });
     const recipe = await db.get('SELECT * FROM recipes WHERE id = ?', [lastID]);
     expect(recipe.title).toBe('Original');
   });

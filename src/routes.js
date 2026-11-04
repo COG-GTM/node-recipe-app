@@ -43,7 +43,7 @@ router.post('/recipes/:id/edit', async (req, res) => {
 		return res.status(404).render('recipe', { recipe: null })
 	}
 	if (typeof title !== 'string' || !title.trim()) {
-		return res.status(400).render('recipe', { recipe, error: 'Recipe title is required.' })
+		return res.status(400).render('recipe', { recipe, error: 'Recipe title is required.', formValues: req.body })
 	}
 	await db.run('UPDATE recipes SET title = ?, ingredients = ?, method = ? WHERE id = ?', [
 		title.trim(),
