@@ -9,7 +9,7 @@
         </div>
         
         <!-- Recipe Details -->
-        <div id="recipe-details" class="recipe-content">
+        <div id="recipe-details" class="recipe-content" style="display: {{#if error}}none{{else}}block{{/if}};">
             <div class="recipe-section">
                 <h2>Ingredients</h2>
                 <div class="ingredients">
@@ -46,8 +46,11 @@
         </div>
         
         <!-- Edit Recipe Form (initially hidden) -->
-        <div id="edit-recipe-form" class="recipe-form" style="display: none;">
+        <div id="edit-recipe-form" class="recipe-form" style="display: {{#if error}}block{{else}}none{{/if}};">
             <h2>Edit Recipe</h2>
+            {{#if error}}
+            <div class="form-error" role="alert">{{error}}</div>
+            {{/if}}
             <form action="/recipes/{{recipe.id}}/edit" method="POST">
                 <div class="form-group">
                     <label for="edit-title">Recipe Title:</label>
