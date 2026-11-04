@@ -1,8 +1,22 @@
 <div class="recipes-container">
     <div class="recipes-header">
         <h1>All Recipes</h1>
-        <button class="btn btn-primary" onclick="showAddForm()">Add New Recipe</button>
+        <div class="recipes-header-actions">
+            <a href="/recipes/random" class="btn btn-secondary">Random Recipe</a>
+            <button class="btn btn-primary" onclick="showAddForm()">Add New Recipe</button>
+        </div>
     </div>
+
+    <form class="search-form" action="/recipes" method="GET" role="search">
+        <input type="search" name="q" value="{{query}}" placeholder="Search by title or ingredient" aria-label="Search recipes">
+        <button type="submit" class="btn btn-primary">Search</button>
+        {{#if query}}
+        <a href="/recipes" class="btn btn-secondary">Clear</a>
+        {{/if}}
+    </form>
+    {{#if query}}
+    <p class="search-summary">Showing {{recipes.length}} result(s) for &ldquo;{{query}}&rdquo;</p>
+    {{/if}}
     
     <!-- Add Recipe Form (initially hidden) -->
     <div id="add-recipe-form" class="recipe-form" style="display: none;">
@@ -45,9 +59,15 @@
             </div>
             {{/each}}
         {{else}}
+            {{#if query}}
+            <div class="no-recipes">
+                <p>No recipes match &ldquo;{{query}}&rdquo;. <a href="/recipes">Show all recipes</a></p>
+            </div>
+            {{else}}
             <div class="no-recipes">
                 <p>No recipes found. <a href="#" onclick="showAddForm()">Add your first recipe!</a></p>
             </div>
+            {{/if}}
         {{/if}}
     </div>
 </div>

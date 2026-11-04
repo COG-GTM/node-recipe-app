@@ -64,4 +64,65 @@ describe('Routes', () => {
     expect(recipe).toBeDefined();
     expect(recipe.title).toBe(newRecipe.title);
   });
+
+  describe('search and random', () => {
+    async function seed() {
+      const rows = [
+        ['Spaghetti Carbonara', '1 lb spaghetti\n3 eggs', 'cook'],
+        ['Caesar Salad', 'romaine lettuce\nparmesan', 'toss'],
+        ['100% Juice', 'oranges', 'squeeze'],
+      ];
+      for (const row of rows) {
+        await db.run('INSERT INTO recipes (title, ingredients, method) VALUES (?, ?, ?)', row);
+      }
+    }
+
+    test('GET /recipes?q= matches title case-insensitively', async () => {
+      await seed();
+      const response = await request(app).get('/recipes').query({ q: 'caesar' });
+      expect(response.status).toBe(200);
+      expect(response.body.locals.query).toBe('caesar');
+      expect(response.body.locals.recipes.map(r => r.title)).toEqual(['Caesar Salad']);
+    });
+
+    test('GET /recipes?q= matches ingredients', async () => {
+      await seed();
+      const response = await request(app).get('/recipes').query({ q: 'eggs' });
+      expect(response.body.locals.recipes.map(r => r.title)).toEqual(['Spaghetti Carbonara']);
+    });
+
+    test('GET /recipes?q= treats % as a literal character', async () => {
+      await seed();
+      const response = await request(app).get('/recipes').query({ q: '%' });
+      expect(response.body.locals.recipes.map(r => r.title)).toEqual(['100% Juice']);
+    });
+
+    test('GET /recipes?q= with no match returns an empty list', async () => {
+      await seed();
+      const response = await request(app).get('/recipes').query({ q: 'tofu' });
+      expect(response.status).toBe(200);
+      expect(response.body.locals.recipes).toEqual([]);
+    });
+
+    test('GET /recipes with a blank query returns all recipes', async () => {
+      await seed();
+      const response = await request(app).get('/recipes').query({ q: '   ' });
+      expect(response.body.locals.recipes).toHaveLength(3);
+      expect(response.body.locals.query).toBeUndefined();
+    });
+
+    test('GET /recipes/random redirects to an existing recipe', async () => {
+      await seed();
+      const ids = (await db.all('SELECT id FROM recipes')).map(r => `/recipes/${r.id}`);
+      const response = await request(app).get('/recipes/random');
+      expect(response.status).toBe(302);
+      expect(ids).toContain(response.headers.location);
+    });
+
+    test('GET /recipes/random redirects to /recipes when there are no recipes', async () => {
+      const response = await request(app).get('/recipes/random');
+      expect(response.status).toBe(302);
+      expect(response.headers.location).toBe('/recipes');
+    });
+  });
 });

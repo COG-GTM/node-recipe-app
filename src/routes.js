@@ -9,8 +9,23 @@ router.get('/', (req, res) => {
 
 router.get('/recipes', async (req, res) => {
 	const db = await getDbConnection()
-	const recipes = await db.all('SELECT * FROM recipes')
-	res.render('recipes', { recipes })
+	const query = typeof req.query.q === 'string' ? req.query.q.trim() : ''
+	if (!query) {
+		const recipes = await db.all('SELECT * FROM recipes')
+		return res.render('recipes', { recipes })
+	}
+	const pattern = `%${query.replace(/[\\%_]/g, '\\$&')}%`
+	const recipes = await db.all(
+		"SELECT * FROM recipes WHERE title LIKE ? ESCAPE '\\' OR ingredients LIKE ? ESCAPE '\\'",
+		[pattern, pattern]
+	)
+	res.render('recipes', { recipes, query })
+})
+
+router.get('/recipes/random', async (req, res) => {
+	const db = await getDbConnection()
+	const recipe = await db.get('SELECT id FROM recipes ORDER BY RANDOM() LIMIT 1')
+	res.redirect(recipe ? `/recipes/${recipe.id}` : '/recipes')
 })
 
 router.get('/recipes/:id', async (req, res) => {
