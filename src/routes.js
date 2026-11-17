@@ -9,8 +9,17 @@ router.get('/', (req, res) => {
 
 router.get('/recipes', async (req, res) => {
 	const db = await getDbConnection()
-	const recipes = await db.all('SELECT * FROM recipes')
-	res.render('recipes', { recipes })
+	const query = typeof req.query.q === 'string' ? req.query.q.trim() : ''
+	if (!query) {
+		const recipes = await db.all('SELECT * FROM recipes')
+		return res.render('recipes', { recipes })
+	}
+	const pattern = `%${query.replace(/[\\%_]/g, '\\$&')}%`
+	const recipes = await db.all(
+		"SELECT * FROM recipes WHERE title LIKE ? ESCAPE '\\' OR ingredients LIKE ? ESCAPE '\\'",
+		[pattern, pattern]
+	)
+	res.render('recipes', { recipes, query })
 })
 
 router.get('/recipes/:id', async (req, res) => {
@@ -38,6 +47,12 @@ router.post('/recipes/:id/edit', async (req, res) => {
 		recipeId,
 	])
 	res.redirect(`/recipes/${recipeId}`)
+})
+
+router.post('/recipes/:id/delete', async (req, res) => {
+	const db = await getDbConnection()
+	await db.run('DELETE FROM recipes WHERE id = ?', [req.params.id])
+	res.redirect('/recipes')
 })
 
 module.exports = router
