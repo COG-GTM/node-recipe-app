@@ -49,10 +49,4 @@ router.post('/recipes/:id/edit', async (req, res) => {
 	res.redirect(`/recipes/${recipeId}`)
 })
 
-router.post('/recipes/:id/delete', async (req, res) => {
-	const db = await getDbConnection()
-	await db.run('DELETE FROM recipes WHERE id = ?', [req.params.id])
-	res.redirect('/recipes')
-})
-
 module.exports = router

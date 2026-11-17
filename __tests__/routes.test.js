@@ -118,38 +118,4 @@ describe('Routes', () => {
     });
   });
 
-  describe('delete', () => {
-    test('POST /recipes/:id/delete removes the recipe and redirects to the list', async () => {
-      const { lastID } = await db.run(
-        'INSERT INTO recipes (title, ingredients, method) VALUES (?, ?, ?)',
-        ['Doomed Recipe', 'x', 'y']
-      );
-      const { lastID: keptId } = await db.run(
-        'INSERT INTO recipes (title, ingredients, method) VALUES (?, ?, ?)',
-        ['Kept Recipe', 'x', 'y']
-      );
-
-      const response = await request(app).post(`/recipes/${lastID}/delete`);
-
-      expect(response.status).toBe(302);
-      expect(response.headers.location).toBe('/recipes');
-      expect(await db.get('SELECT * FROM recipes WHERE id = ?', [lastID])).toBeUndefined();
-      expect(await db.get('SELECT * FROM recipes WHERE id = ?', [keptId])).toBeDefined();
-    });
-
-    test('POST /recipes/:id/delete for a missing id still redirects', async () => {
-      const response = await request(app).post('/recipes/9999/delete');
-      expect(response.status).toBe(302);
-      expect(response.headers.location).toBe('/recipes');
-    });
-
-    test('GET /recipes/:id/delete is not a delete route', async () => {
-      const { lastID } = await db.run(
-        'INSERT INTO recipes (title, ingredients, method) VALUES (?, ?, ?)',
-        ['Safe Recipe', 'x', 'y']
-      );
-      await request(app).get(`/recipes/${lastID}/delete`);
-      expect(await db.get('SELECT * FROM recipes WHERE id = ?', [lastID])).toBeDefined();
-    });
-  });
 });
