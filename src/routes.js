@@ -13,10 +13,19 @@ router.get('/recipes', async (req, res) => {
 	res.render('recipes', { recipes })
 })
 
+router.get('/recipes/random', async (req, res) => {
+	const db = await getDbConnection()
+	const recipe = await db.get('SELECT id FROM recipes ORDER BY RANDOM() LIMIT 1')
+	res.redirect(recipe ? `/recipes/${recipe.id}` : '/recipes')
+})
+
 router.get('/recipes/:id', async (req, res) => {
 	const db = await getDbConnection()
 	const recipeId = req.params.id
 	const recipe = await db.get('SELECT * FROM recipes WHERE id = ?', [recipeId])
+	if (!recipe) {
+		return res.status(404).render('recipe', { recipe })
+	}
 	res.render('recipe', { recipe })
 })
 
