@@ -1,5 +1,5 @@
 const express = require('express')
-const { getDbConnection } = require('./database')
+const recipes = require('./database/recipeRepository')
 
 const router = express.Router()
 
@@ -8,36 +8,41 @@ router.get('/', (req, res) => {
 })
 
 router.get('/recipes', async (req, res) => {
-	const db = await getDbConnection()
-	const recipes = await db.all('SELECT * FROM recipes')
-	res.render('recipes', { recipes })
+	const query = (req.query.q || '').trim()
+	const results = query ? await recipes.searchRecipes(query) : await recipes.listRecipes()
+	res.render('recipes', { recipes: results, query })
 })
 
 router.get('/recipes/:id', async (req, res) => {
-	const db = await getDbConnection()
-	const recipeId = req.params.id
-	const recipe = await db.get('SELECT * FROM recipes WHERE id = ?', [recipeId])
-	res.render('recipe', { recipe })
+	const recipe = await recipes.getRecipe(req.params.id)
+	const averageRating = await recipes.getAverageRating(req.params.id)
+	res.render('recipe', { recipe, averageRating })
 })
 
 router.post('/recipes', async (req, res) => {
-	const db = await getDbConnection()
-	const { title, ingredients, method } = req.body
-	await db.run('INSERT INTO recipes (title, ingredients, method) VALUES (?, ?, ?)', [title, ingredients, method])
+	await recipes.createRecipe(req.body)
 	res.redirect('/recipes')
 })
 
 router.post('/recipes/:id/edit', async (req, res) => {
-	const db = await getDbConnection()
 	const recipeId = req.params.id
-	const { title, ingredients, method } = req.body
-	await db.run('UPDATE recipes SET title = ?, ingredients = ?, method = ? WHERE id = ?', [
-		title,
-		ingredients,
-		method,
-		recipeId,
-	])
+	await recipes.updateRecipe(recipeId, req.body)
 	res.redirect(`/recipes/${recipeId}`)
+})
+
+router.post('/recipes/:id/rate', async (req, res) => {
+	const recipeId = req.params.id
+	const stars = Number(req.body.stars)
+	if (stars < 1 && stars > 5) {
+		return res.status(400).send('Rating must be between 1 and 5')
+	}
+	await recipes.addRating(recipeId, stars)
+	res.redirect(`/recipes/${recipeId}`)
+})
+
+router.get('/recipes/:id/delete', async (req, res) => {
+	await recipes.deleteRecipe(req.params.id)
+	res.redirect('/recipes')
 })
 
 module.exports = router

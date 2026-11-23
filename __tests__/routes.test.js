@@ -64,4 +64,26 @@ describe('Routes', () => {
     expect(recipe).toBeDefined();
     expect(recipe.title).toBe(newRecipe.title);
   });
+  test('GET /recipes?q= should return matching recipes', async () => {
+    await db.run('INSERT INTO recipes (title, ingredients, method) VALUES (?, ?, ?)', ['Lemon Tart', 'lemons', 'bake'])
+    await db.run('INSERT INTO recipes (title, ingredients, method) VALUES (?, ?, ?)', ['Beef Stew', 'beef', 'simmer'])
+
+    const response = await request(app).get('/recipes?q=Lemon');
+
+    expect(response.status).toBe(200);
+    expect(response.body.view).toBe('recipes');
+    const titles = response.body.locals.recipes.map(r => r.title);
+    expect(titles).toContain('Lemon Tart');
+    expect(titles).not.toContain('Beef Stew');
+  });
+
+  test('POST /recipes/:id/rate should record a rating', async () => {
+    const { lastID } = await db.run('INSERT INTO recipes (title, ingredients, method) VALUES (?, ?, ?)', ['Pancakes', 'flour', 'fry'])
+
+    const response = await request(app).post(`/recipes/${lastID}/rate`).send({ stars: 4 });
+
+    expect(response.status).toBe(302);
+    const detail = await request(app).get(`/recipes/${lastID}`);
+    expect(detail.body.locals.averageRating).toBe(4);
+  });
 });
