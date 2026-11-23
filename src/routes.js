@@ -9,7 +9,7 @@ router.get('/', (req, res) => {
 
 router.get('/recipes', async (req, res) => {
 	const db = await getDbConnection()
-	const recipes = await db.all('SELECT * FROM recipes')
+	const recipes = await db.all('SELECT * FROM recipes ORDER BY title COLLATE NOCASE ASC, id ASC')
 	res.render('recipes', { recipes })
 })
 
