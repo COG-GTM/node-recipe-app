@@ -9,8 +9,11 @@ router.get('/', (req, res) => {
 
 router.get('/recipes', async (req, res) => {
 	const db = await getDbConnection()
-	const recipes = await db.all('SELECT * FROM recipes')
-	res.render('recipes', { recipes })
+	const search = typeof req.query.q === 'string' ? req.query.q.trim() : ''
+	const recipes = search
+		? await db.all('SELECT * FROM recipes WHERE instr(lower(title), lower(?)) > 0', [search])
+		: await db.all('SELECT * FROM recipes')
+	res.render('recipes', { recipes, search })
 })
 
 router.get('/recipes/:id', async (req, res) => {
