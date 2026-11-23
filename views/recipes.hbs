@@ -35,7 +35,7 @@
         {{#if recipes}}
             {{#each recipes}}
             <div class="recipe-card">
-                <h3><a href="/recipes/{{id}}">{{title}}</a></h3>
+                <h3><a href="/recipes/{{id}}">{{title}}</a> <span class="ingredient-count">{{ingredientCountLabel}}</span></h3>
                 <div class="recipe-preview">
                     <p><strong>Ingredients:</strong> {{truncate ingredients 100}}</p>
                 </div>
