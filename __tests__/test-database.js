@@ -23,6 +23,12 @@ async function createTables(db) {
     ingredients TEXT,
     method TEXT
   )`)
+
+	await db.exec(`CREATE TABLE IF NOT EXISTS ratings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    recipe_id INTEGER NOT NULL,
+    stars INTEGER NOT NULL
+  )`)
 }
 
 module.exports = { getTestDbConnection, initializeTestDb }

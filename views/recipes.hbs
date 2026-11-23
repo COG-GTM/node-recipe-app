@@ -4,6 +4,11 @@
         <button class="btn btn-primary" onclick="showAddForm()">Add New Recipe</button>
     </div>
     
+    <form class="search-form" action="/recipes" method="GET">
+        <input type="search" name="q" value="{{query}}" placeholder="Search recipes by title">
+        <button type="submit" class="btn btn-secondary">Search</button>
+    </form>
+
     <!-- Add Recipe Form (initially hidden) -->
     <div id="add-recipe-form" class="recipe-form" style="display: none;">
         <h2>Add New Recipe</h2>

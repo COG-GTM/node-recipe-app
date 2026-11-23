@@ -4,10 +4,30 @@
             <h1>{{recipe.title}}</h1>
             <div class="recipe-actions">
                 <button class="btn btn-primary" onclick="showEditForm()">Edit Recipe</button>
+                <a href="/recipes/{{recipe.id}}/delete" class="btn btn-danger">Delete Recipe</a>
                 <a href="/recipes" class="btn btn-secondary">Back to All Recipes</a>
             </div>
         </div>
         
+        <div class="recipe-rating">
+            {{#if averageRating}}
+                <p><strong>Average rating:</strong> {{averageRating}} / 5</p>
+            {{else}}
+                <p>No ratings yet.</p>
+            {{/if}}
+            <form action="/recipes/{{recipe.id}}/rate" method="POST">
+                <label for="stars">Rate this recipe:</label>
+                <select id="stars" name="stars">
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                </select>
+                <button type="submit" class="btn btn-sm">Rate</button>
+            </form>
+        </div>
+
         <!-- Recipe Details -->
         <div id="recipe-details" class="recipe-content">
             <div class="recipe-section">
