@@ -235,6 +235,18 @@ main {
 	color: #3498db;
 }
 
+.recipe-card .ingredient-count {
+	display: inline-block;
+	margin-left: 0.5rem;
+	padding: 0.1rem 0.5rem;
+	border-radius: 999px;
+	background: #ecf0f1;
+	color: #7f8c8d;
+	font-size: 0.75rem;
+	font-weight: normal;
+	vertical-align: middle;
+}
+
 .recipe-preview {
 	margin-bottom: 1rem;
 }

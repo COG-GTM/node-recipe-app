@@ -1,5 +1,6 @@
 const express = require('express')
 const { getDbConnection } = require('./database')
+const { countIngredients, formatIngredientCount } = require('./ingredients')
 
 const router = express.Router()
 
@@ -9,7 +10,11 @@ router.get('/', (req, res) => {
 
 router.get('/recipes', async (req, res) => {
 	const db = await getDbConnection()
-	const recipes = await db.all('SELECT * FROM recipes')
+	const rows = await db.all('SELECT * FROM recipes')
+	const recipes = rows.map(recipe => {
+		const ingredientCount = countIngredients(recipe.ingredients)
+		return { ...recipe, ingredientCount, ingredientCountLabel: formatIngredientCount(ingredientCount) }
+	})
 	res.render('recipes', { recipes })
 })
 
