@@ -64,4 +64,56 @@ describe('Routes', () => {
     expect(recipe).toBeDefined();
     expect(recipe.title).toBe(newRecipe.title);
   });
+
+  describe('GET /recipes alphabetical sorting', () => {
+    const insertRecipe = (title) =>
+      db.run('INSERT INTO recipes (title, ingredients, method) VALUES (?, ?, ?)', [title, 'ingredients', 'method']);
+    const titlesFrom = (response) => response.body.locals.recipes.map((r) => r.title);
+
+    test('AC1: sorts recipes A to Z by title, case-insensitive', async () => {
+      await insertRecipe('Pancakes');
+      await insertRecipe('apple pie');
+      await insertRecipe('Banana Bread');
+
+      const response = await request(app).get('/recipes');
+
+      expect(response.status).toBe(200);
+      expect(response.body.view).toBe('recipes');
+      expect(titlesFrom(response)).toEqual(['apple pie', 'Banana Bread', 'Pancakes']);
+    });
+
+    test('AC2: a recipe added via POST /recipes appears in its alphabetical position', async () => {
+      await insertRecipe('Apple Pie');
+      await insertRecipe('Pancakes');
+
+      const postResponse = await request(app)
+        .post('/recipes')
+        .send({ title: 'Banana Bread', ingredients: 'bananas', method: 'bake' });
+      expect(postResponse.headers.location).toBe('/recipes');
+
+      const response = await request(app).get('/recipes');
+      expect(titlesFrom(response)).toEqual(['Apple Pie', 'Banana Bread', 'Pancakes']);
+    });
+
+    test('AC3: editing a title via POST /recipes/:id/edit moves it to its new alphabetical position', async () => {
+      await insertRecipe('Apple Pie');
+      const { lastID } = await insertRecipe('Banana Bread');
+      await insertRecipe('Pancakes');
+
+      await request(app)
+        .post(`/recipes/${lastID}/edit`)
+        .send({ title: 'Zucchini Loaf', ingredients: 'zucchini', method: 'bake' });
+
+      const response = await request(app).get('/recipes');
+      expect(titlesFrom(response)).toEqual(['Apple Pie', 'Pancakes', 'Zucchini Loaf']);
+    });
+
+    test('AC4: renders the recipes view with an empty list when there are no recipes', async () => {
+      const response = await request(app).get('/recipes');
+
+      expect(response.status).toBe(200);
+      expect(response.body.view).toBe('recipes');
+      expect(response.body.locals.recipes).toEqual([]);
+    });
+  });
 });
