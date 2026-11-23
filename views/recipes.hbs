@@ -30,6 +30,16 @@
         </form>
     </div>
     
+    <!-- Search Form -->
+    <form class="recipe-search" action="/recipes" method="GET" role="search">
+        <label for="recipe-search-q">Search recipes by title:</label>
+        <input type="search" id="recipe-search-q" name="q" value="{{search}}">
+        <button type="submit" class="btn btn-primary">Search</button>
+        {{#if search}}
+            <a href="/recipes" class="btn btn-secondary">Clear</a>
+        {{/if}}
+    </form>
+
     <!-- Recipes List -->
     <div class="recipes-grid">
         {{#if recipes}}
@@ -44,6 +54,10 @@
                 </div>
             </div>
             {{/each}}
+        {{else if search}}
+            <div class="no-recipes">
+                <p>No recipes match "{{search}}"</p>
+            </div>
         {{else}}
             <div class="no-recipes">
                 <p>No recipes found. <a href="#" onclick="showAddForm()">Add your first recipe!</a></p>
