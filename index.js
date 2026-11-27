@@ -4,6 +4,7 @@ const { initializeDb } = require('./src/database')
 const routes = require('./src/routes')
 
 const app = express()
+app.disable('x-powered-by')
 const PORT = process.env.PORT || 3000
 
 app.use(express.json())

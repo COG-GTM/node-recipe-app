@@ -11,6 +11,7 @@ jest.mock('../src/database', () => ({
 // Simple app setup for testing
 function createTestApp() {
   const app = express();
+  app.disable('x-powered-by');
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   
