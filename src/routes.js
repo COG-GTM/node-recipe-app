@@ -1,7 +1,17 @@
 const express = require('express')
+const { rateLimit } = require('express-rate-limit')
 const { getDbConnection } = require('./database')
 
 const router = express.Router()
+
+router.use(
+	rateLimit({
+		windowMs: 15 * 60 * 1000,
+		limit: 300,
+		standardHeaders: 'draft-8',
+		legacyHeaders: false,
+	})
+)
 
 router.get('/', (req, res) => {
 	res.render('home', { title: 'Recipe App' })
