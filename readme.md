@@ -27,6 +27,8 @@ npm start
 ```
 Visit `http://localhost:3000` to start managing your recipes.
 
+Running outside a container requires Node.js 22.23.5 or later. The prebuilt `sqlite3` binary needs glibc 2.38+ (e.g. Ubuntu 24.04); on older Linux distributions build it from source with `npm rebuild sqlite3 --build-from-source`.
+
 ## License
 
 This project is licensed under the terms of the MIT open source license. Please refer to [MIT](https://github.com/github-samples/node-recipe-app/blob/main/LICENSE) for the full terms.
